@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 const ordersDB: Order[] = [
   {
     id: crypto.randomUUID(),
-    clientName: '122',
+    clientName: 'Example Client',
     status: 'Pending',
     productId: '1',
     createAt: Date.now(),
