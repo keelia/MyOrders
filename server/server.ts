@@ -1,6 +1,5 @@
 const express = require('express');
 const crypto = require('crypto');
-const cluster = require('cluster');
 import { Request, Response } from 'express';
 import type { Order } from '@shared/model/Order';
 
@@ -19,56 +18,54 @@ const ordersDB: Order[] = [
     createAt: Date.now(),
   },
 ];
-if (cluster.isMaster) {
-  cluster.fork();
-  processOrders();
-} else {
-  app.get('/', (req: Request, res: Response) => {
-    res.send('Hello World!!!!');
-  });
+app.get('/', (req: Request, res: Response) => {
+  res.send('Hello World!!!!');
+});
 
-  app.get('/orders', (req: Request, res: Response) => {
-    console.log('getting data');
-    processOrders();
-    res.send(ordersDB);
-  });
+app.get('/orders', (req: Request, res: Response) => {
+  res.send(ordersDB);
+});
 
-  app.post('/order', (req: Request, res: Response) => {
-    const { clientName, productId } = req.body as Order;
-    ordersDB.push({
-      id: crypto.randomUUID(),
-      clientName,
-      productId,
-      status: 'Pending',
-      createAt: Date.now(),
-    });
-    res.send(ordersDB);
+app.post('/order', (req: Request, res: Response) => {
+  const { clientName, productId } = req.body as Order;
+  ordersDB.push({
+    id: crypto.randomUUID(),
+    clientName,
+    productId,
+    status: 'Pending',
+    createAt: Date.now(),
   });
+  res.send(ordersDB);
+});
 
-  app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-  });
-}
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
 
-function processOrders() {
-  for (const order of ordersDB) {
-    processOrderStatus(order);
+startProcessOrders();
+
+async function startProcessOrders() {
+  console.log('Order processor started...');
+  while (true) {
+    await processOrders();
+    await new Promise((r) => setTimeout(r, 1000));
   }
 }
 
-function processOrderStatus(order: Order) {
-  if (order.createAt) {
-    const now = Date.now();
-    if (order.status === 'Pending') {
-      if ((now - order.createAt) / 1000 >= 2) {
+async function processOrders() {
+  const now = Date.now();
+  for (const order of ordersDB) {
+    if (order.createAt) {
+      if (order.status === 'Pending' && now - order.createAt >= 2000) {
         order.status = 'Processing';
         order.updateAt = now;
-      }
-    } else if (order.status === 'Processing' && order.updateAt) {
-      if ((now - order.updateAt) / 1000 >= 8) {
+      } else if (
+        order.status === 'Processing' &&
+        order.updateAt &&
+        now - order.updateAt >= 8000
+      ) {
         order.status = 'Completed';
       }
     }
   }
-  console.log('after process', order.id, order.status);
 }
