@@ -67,7 +67,7 @@ export default function OrderForm({ onSubmit }: OrderFormProps) {
           type="submit"
           className="rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 text-green-900"
         >
-          Submit
+          Submit Order
         </Button>
       </div>
     </form>

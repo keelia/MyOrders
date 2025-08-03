@@ -34,7 +34,7 @@ export default function Orders() {
             </Model>
           </div>}
           dataSource={data as Order[]}
-          renderItem={(item: Order) => <OrderItem name={item.clientName} status={item.status} />} /> : <p>No Orders</p>
+          renderItem={(item: Order) => <OrderItem {...item} />} /> : <p>No Orders</p>
       )}
     </div>
   )
