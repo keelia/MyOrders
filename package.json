@@ -4,7 +4,7 @@
   "description": "A simple order processing interface with live status updates",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\""
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\" "
   },
   "author": "",
   "license": "ISC",
