@@ -2,7 +2,6 @@ import { type ReactNode } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 
-
 const ModelType = {
   Info: 'Info',
   Warning: 'Warning',

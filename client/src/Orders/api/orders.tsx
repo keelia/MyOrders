@@ -1,31 +1,47 @@
-import useSWR from 'swr'
+import useSWR from 'swr';
 import type { Order } from '@shared/model/Order';
+import type { SWRConfiguration } from 'swr';
+
 const ORDERS_URL = "/api/orders";
 const ORDER_CREATE_URL = "/api/order";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) {
+      throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+    }
+    return res.json();
+  });
 
-async function addOrder(order: Order) {
-  try {
-    throw new Error("Test");
+async function addOrder(order: Order): Promise<Order> {
+  const response = await fetch(ORDER_CREATE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(order),
+  });
 
-    // const orders = await fetch(ORDER_CREATE_URL, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(order),
-    // }).then((res) => res.json());
-    // return orders
-  } catch (err) {
-    console.error('Failed to add item:', err);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create order: ${response.status} ${errorText}`);
   }
+
+  return response.json();
 }
 
-export const useOrders = (config?: any) => {
-  const { data, mutate, isLoading, ...props } = useSWR(ORDERS_URL, fetcher, { refreshInterval: 1000, ...config });
+export interface OnAddCallbackParam {
+  success: boolean;
+  error?: unknown;
+}
+interface UseOrdersOptions {
+  onAdd?: (result: OnAddCallbackParam) => void;
+  config?: SWRConfiguration<Order[]>;
+}
+
+export const useOrders = ({ onAdd, config }: UseOrdersOptions = {}) => {
+  const { data, mutate, isLoading, } = useSWR(ORDERS_URL, fetcher, { refreshInterval: 1000, ...config });
   const addItem = async (newOrder: Order) => {
-    console.log('add item')
     try {
       await mutate(addOrder(newOrder), {
         optimisticData: [...data, newOrder],
@@ -33,12 +49,11 @@ export const useOrders = (config?: any) => {
         populateCache: true,
         revalidate: false
       });
-      console.log("Successfully added the new item.");
+      onAdd?.({ success: true });
     } catch (e) {
-      console.error(e, "Failed to add the new item.");
+      onAdd?.({ success: false, error: e });
     }
   };
-  console.log(data, isLoading, props)
   return { data, addItem, isLoading }
 }
 

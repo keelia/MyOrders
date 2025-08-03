@@ -1,16 +1,24 @@
-import { useState } from 'react'
+import { useActionState, useCallback, useState } from 'react'
 import List from '../components/List/List'
 import Model from '../components/Model/Model'
 import OrderItem from './OrderItem'
 import OrderForm from './OrderForm'
-import { useOrders } from './api/orders'
+import { useOrders, type OnAddCallbackParam } from './api/orders'
 import type { Order } from '../../../shared/model/Order'
+import Alert from 'src/components/Alert/Alert'
 
 export default function Orders() {
-  const { data, addItem, isLoading } = useOrders({ refreshInterval: 1000 });
+  const [error, setError] = useState<string | undefined>();
+  const onAdd = useCallback(({ success, error }: OnAddCallbackParam) => {
+    if (!success) {
+      setError(String(error))
+    }
+  }, [])
+  const { data, addItem, isLoading } = useOrders({ onAdd });
   const [open, setOpen] = useState(false);
   return (
     <div className='mt-2'>
+      <Alert message={error} />
       {isLoading ? <p>Loading</p> : (
         !!data?.length ? <List
           header={<div className='flex justify-between items-center'>
